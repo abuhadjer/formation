@@ -9,7 +9,7 @@ from statsmodels.tsa.arima.model import ARIMA
 
 import google.generativeai as genai  # مكتبة Google AI لاستدعاء Gemini
 genai.configure(api_key="AIzaSyBfyyQwcKpcJRWtwuOTWkIOu1z7P8C4Y20")
-st.title("aroma model")
+st.set_page_config(page_title='arma model',layout="wide")
 # تحميل البيانات
 uploaded_file = st.file_uploader("تحميل ملف البيانات", type=".xlsx")
 df = pd.read_excel(uploaded_file).copy()
