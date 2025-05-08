@@ -5,3 +5,7 @@ seaborn
 statsmodels
 google-generativeai
 openpyxl
+streamlit_option_menu
+plotly
+pinguin
+graphviz
