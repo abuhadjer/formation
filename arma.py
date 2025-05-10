@@ -1442,8 +1442,8 @@ def main():
 
     with st.sidebar:
         st.markdown("""
-            <h3 style='text-align: right;'>الدورة التكوينية ـ أكاديمية المحترفين</h3>
-            <p style='text-align: right; font-size:16px; color:blue;'>من تقديم الأستاذين إبراهيم عدلي ورابح بلعباس</p>
+            <h3 style='text-align: right;'>الدورة التكوينية ـ المدرسة الوطنية العليا للعلوم الاسلامية</h3>
+            <p style='text-align: right; font-size:16px; color:blue;'>من تقديم الأستاذ إبراهيم عدلي</p>
         """, unsafe_allow_html=True)
         st.markdown("# إختر التحليل المناسب")
         selection = option_menu("Menu", list(pages.keys()), icons=['bar-chart', 'scatter-chart', 'line-chart'],
