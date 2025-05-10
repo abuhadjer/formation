@@ -1442,7 +1442,7 @@ def main():
 
     with st.sidebar:
         st.markdown("""
-            <h3 style='text-align: right;'>الدورة التكوينية ـ المدرسة الوطنية العليا للعلوم الاسلامية</h3>
+            <h3 style='text-align: right;'>الدورة التكوينية -المدرسة الوطنية العليا للعلوم الاسلامية</h3>
             <p style='text-align: right; font-size:16px; color:blue;'>من تقديم الأستاذ إبراهيم عدلي</p>
         """, unsafe_allow_html=True)
         st.markdown("# إختر التحليل المناسب")
