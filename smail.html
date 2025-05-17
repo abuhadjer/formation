@@ -1,0 +1,355 @@
+
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ورشتي لحساب الأجور</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .card {
+            margin-bottom: 20px;
+        }
+        .header {
+            background-color: #343a40;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .navbar {
+            margin-bottom: 20px;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#">ورشتي</a>
+        <div class="collapse navbar-collapse">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="#" onclick="showPage('settingsPage')">الإعدادات</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#" onclick="showPage('dailyPage')">التسجيل اليومي</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#" onclick="showPage('reportPage')">التقارير</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<div class="container">
+    <!-- صفحة الإعدادات -->
+    <div id="settingsPage">
+        <div class="header">
+            <h2>الإعدادات</h2>
+        </div>
+
+        <!-- العمليات -->
+        <div class="card">
+            <div class="card-header">العمليات</div>
+            <div class="card-body">
+                <div class="input-group mb-3">
+                    <input type="text" id="operationName" class="form-control" placeholder="اسم العملية">
+                    <input type="number" id="operationPrice" class="form-control" placeholder="سعر الوحدة">
+                </div>
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" id="isOneThird">
+                    <label class="form-check-label" for="isOneThird">يُحتسب ثلث الأجر فقط</label>
+                </div>
+                <button class="btn btn-success" onclick="addOperation()">إضافة</button>
+                <ul id="operationsList" class="list-group"></ul>
+            </div>
+        </div>
+
+        <!-- العمال -->
+        <div class="card">
+            <div class="card-header">العمال</div>
+            <div class="card-body">
+                <div class="input-group mb-3">
+                    <input type="text" id="workerName" class="form-control" placeholder="اسم العامل">
+                    <button class="btn btn-success" onclick="addWorker()">إضافة</button>
+                </div>
+                <ul id="workersList" class="list-group"></ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- صفحة التسجيل اليومي -->
+    <div id="dailyPage" class="hidden">
+        <div class="header">
+            <h2>تسجيل العمل اليومي</h2>
+        </div>
+        <div class="card">
+            <div class="card-body">
+                <div class="mb-3">
+                    <label>تاريخ اليوم</label>
+                    <input type="date" id="workDate" class="form-control">
+                </div>
+                <div class="mb-3">
+                    <label>العملية</label>
+                    <select id="workOperation" class="form-select"></select>
+                </div>
+                <div class="mb-3">
+                    <label>الكمية المنجزة</label>
+                    <input type="number" id="workQuantity" class="form-control">
+                </div>
+                <div class="mb-3">
+                    <label>اختر العمال المشاركين</label>
+                    <div id="workerCheckboxes"></div>
+                </div>
+                <div class="mb-3">
+                    <label>المصروفات لكل عامل (اختياري)</label>
+                    <div id="expensesInputs"></div>
+                </div>
+                <button class="btn btn-primary" onclick="saveWorkEntry()">تسجيل</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- صفحة التقارير -->
+    <div id="reportPage" class="hidden">
+        <div class="header">
+            <h2>تقرير الأجور</h2>
+        </div>
+        <div class="card">
+            <div class="card-body">
+                <label>اختر الفترة:</label>
+                <div class="input-group mb-3">
+                    <input type="date" id="startDate" class="form-control">
+                    <input type="date" id="endDate" class="form-control">
+                    <button class="btn btn-outline-info" onclick="generateReport()">عرض التقرير</button>
+                </div>
+                <div id="reportArea"></div>
+                <div id="detailsModal" class="mt-3"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let operations = JSON.parse(localStorage.getItem("operations") || "[]");
+    let workers = JSON.parse(localStorage.getItem("workers") || "[]");
+    let workEntries = JSON.parse(localStorage.getItem("workEntries") || "[]");
+
+    function showPage(id) {
+        document.getElementById("settingsPage").classList.add("hidden");
+        document.getElementById("dailyPage").classList.add("hidden");
+        document.getElementById("reportPage").classList.add("hidden");
+        document.getElementById(id).classList.remove("hidden");
+    }
+
+    function saveData() {
+        localStorage.setItem("operations", JSON.stringify(operations));
+        localStorage.setItem("workers", JSON.stringify(workers));
+        localStorage.setItem("workEntries", JSON.stringify(workEntries));
+    }
+
+    function renderOperations() {
+        const list = document.getElementById("operationsList");
+        const select = document.getElementById("workOperation");
+        if (list) list.innerHTML = "";
+        if (select) select.innerHTML = "";
+
+        operations.forEach((op, i) => {
+            if (list) list.innerHTML += `<li class="list-group-item d-flex justify-content-between">${op.name} - ${op.price} د.أ <button class="btn btn-sm btn-danger" onclick="deleteOperation(${i})">حذف</button></li>`;
+            if (select) select.innerHTML += `<option value="${i}">${op.name}</option>`;
+        });
+    }
+
+    function deleteOperation(index) {
+        operations.splice(index, 1);
+        saveData();
+        renderOperations();
+    }
+
+    function renderWorkers() {
+        const list = document.getElementById("workersList");
+        const checkboxes = document.getElementById("workerCheckboxes");
+        const expenses = document.getElementById("expensesInputs");
+
+        if (list) list.innerHTML = "";
+        if (checkboxes) checkboxes.innerHTML = "";
+        if (expenses) expenses.innerHTML = "";
+
+        workers.forEach((w, i) => {
+            if (list) list.innerHTML += `<li class="list-group-item d-flex justify-content-between">${w.name} <button class="btn btn-sm btn-danger" onclick="deleteWorker(${i})">حذف</button></li>`;
+            if (checkboxes) checkboxes.innerHTML += `<div class="form-check"><input class="form-check-input" type="checkbox" id="workerCheck${i}" value="${i}"><label class="form-check-label" for="workerCheck${i}">${w.name}</label></div>`;
+            if (expenses) expenses.innerHTML += `<div class="input-group mb-2"><span class="input-group-text">${w.name}</span><input type="number" id="expense${i}" class="form-control" placeholder="المصروف (إن وجد)"></div>`;
+        });
+    }
+
+    function deleteWorker(index) {
+        workers.splice(index, 1);
+        saveData();
+        renderWorkers();
+    }
+
+    function addOperation() {
+        const name = document.getElementById("operationName").value;
+        const price = parseFloat(document.getElementById("operationPrice").value);
+        const isOneThird = document.getElementById("isOneThird").checked;
+        if (name && price > 0) {
+            operations.push({ name, price, fraction: isOneThird ? 0.33 : 1 });
+            saveData();
+            renderOperations();
+            document.getElementById("operationName").value = "";
+            document.getElementById("operationPrice").value = "";
+        }
+    }
+
+    function addWorker() {
+        const name = document.getElementById("workerName").value;
+        if (name) {
+            workers.push({ name });
+            saveData();
+            renderWorkers();
+            document.getElementById("workerName").value = "";
+        }
+    }
+
+    function saveWorkEntry() {
+        const date = document.getElementById("workDate").value;
+        const operationIndex = document.getElementById("workOperation").value;
+        const quantity = parseFloat(document.getElementById("workQuantity").value);
+        const selectedWorkers = workers.map((w, i) => document.getElementById("workerCheck" + i).checked ? i : null).filter(x => x !== null);
+        const expenses = workers.map((w, i) => parseFloat(document.getElementById("expense" + i).value) || 0);
+
+        if (!date || !operationIndex || !quantity || selectedWorkers.length === 0) {
+            alert("يرجى ملء جميع الحقول المطلوبة وتحديد العمال.");
+            return;
+        }
+
+        workEntries.push({ date, operationIndex, quantity, selectedWorkers, expenses });
+        saveData();
+        alert("تم تسجيل العملية بنجاح.");
+    }
+
+    function generateReport() {
+        const reportDiv = document.getElementById("reportArea");
+        const start = new Date(document.getElementById("startDate").value);
+        const end = new Date(document.getElementById("endDate").value);
+
+        let totals = workers.map(w => 0);
+        let expensesTotal = workers.map(w => 0);
+        let details = workers.map(() => []);
+
+        workEntries.forEach(entry => {
+            const entryDate = new Date(entry.date);
+            if (isNaN(start) || isNaN(end) || (entryDate >= start && entryDate <= end)) {
+                const op = operations[entry.operationIndex];
+                const fraction = op.fraction || 1;
+                const totalAmount = op.price * entry.quantity * fraction;
+                const share = totalAmount / entry.selectedWorkers.length;
+                entry.selectedWorkers.forEach(i => {
+                    totals[i] += share;
+                    expensesTotal[i] += entry.expenses[i] || 0;
+                    details[i].push({
+                        date: entry.date,
+                        operation: op.name,
+                        quantity: entry.quantity,
+                        amount: share.toFixed(2),
+                        expense: (entry.expenses[i] || 0).toFixed(2)
+                    });
+                });
+            }
+        });
+
+        let html = `<table class="table table-bordered"><thead><tr><th>العامل</th><th>الإجمالي</th><th>المصروف</th><th>الصافي</th><th>تفاصيل</th></tr></thead><tbody>`;
+        workers.forEach((w, i) => {
+            const net = totals[i] - expensesTotal[i];
+            html += `<tr>
+                <td>${w.name}</td>
+                <td>${totals[i].toFixed(2)}</td>
+                <td>${expensesTotal[i].toFixed(2)}</td>
+                <td>${net.toFixed(2)}</td>
+                <td><button class="btn btn-sm btn-info" onclick='showDetails(${JSON.stringify(details[i])}, "${w.name}")'>عرض</button></td>
+            </tr>`;
+        });
+        html += `</tbody></table>`;
+        html += `<div id="detailsModal" class="mt-4"></div>`;
+        reportDiv.innerHTML = html;
+    }
+
+    function showDetails(entries, workerName) {
+        let html = `<h5 class="mt-3">تفاصيل ${workerName}</h5>`;
+        if (entries.length === 0) {
+            html += `<p>لا توجد بيانات.</p>`;
+        } else {
+            html += `<table class="table table-sm table-striped">
+                <thead><tr><th>التاريخ</th><th>العملية</th><th>الكمية</th><th>الأجر</th><th>المصروف</th></tr></thead><tbody>`;
+            entries.forEach(e => {
+                html += `<tr><td>${e.date}</td><td>${e.operation}</td><td>${e.quantity}</td><td>${e.amount}</td><td>${e.expense}</td></tr>`;
+            });
+            html += `</tbody></table>`;
+        }
+        html += `<div class="mt-2"><button class="btn btn-outline-danger" onclick='downloadWorkerPDF("${workerName}")'>تحميل PDF</button></div>`;
+        document.getElementById("detailsModal").innerHTML = html;
+    }
+
+    renderOperations();
+    renderWorkers();
+    showPage("dailyPage");
+</script>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+    async function downloadPDF() {
+        const {{ jsPDF }} = window.jspdf;
+        const doc = new jsPDF('p', 'pt', 'a4');
+        const content = document.getElementById("reportArea");
+        if (!content) {
+            alert("لا يوجد تقرير لطباعته.");
+            return;
+        }
+        await doc.html(content, {
+            callback: function (doc) {
+                doc.save("تقرير_الأجور.pdf");
+            },
+            x: 10,
+            y: 10
+        });
+    }
+</script>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script>
+function downloadWorkerPDF(workerName) {
+    const element = document.getElementById("detailsModal");
+    if (!element || element.innerHTML.trim() === "") {
+        alert("لا توجد تفاصيل للتحميل.");
+        return;
+    }
+
+    const opt = {
+        margin:       0.5,
+        filename:     'تقرير_' + workerName + '.pdf',
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 1, useCORS: true },
+        jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
+    };
+
+    html2pdf().set(opt).from(element).save();
+}
+</script>
+
+
+
+</body>
+</html>
